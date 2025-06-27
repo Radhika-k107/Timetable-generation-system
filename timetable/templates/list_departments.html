@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departments - Timetable Generator</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-color: #2c3e50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .list-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .list-container h2 {
+            color: var(--text-color);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .department-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .department-list th {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .department-list td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .department-list tr:hover {
+            background: var(--secondary-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .view-btn:hover {
+            background: #27ae60;
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .add-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .add-btn:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .back-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .back-btn:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-btn i {
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .department-list {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        .confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 99999;
+            max-width: 450px;
+            width: 90%;
+            animation: fadeIn 0.3s ease-out;
+            border: none;
+        }
+
+        .confirm-content {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .confirm-content i {
+            font-size: 32px;
+            color: #ffc107;
+            margin-bottom: 15px;
+        }
+
+        .confirm-content span {
+            display: block;
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .confirm-buttons button {
+            padding: 10px 25px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            min-width: 100px;
+        }
+
+        .confirm-buttons .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .confirm-buttons .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .confirm-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 99998;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -48%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Department Management</h1>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="list-container">
+                <h2><i class="fas fa-building"></i> Departments</h2>
+                <a href="{% url 'add_department' %}" class="add-btn">
+                    <i class="fas fa-plus"></i> Add New Department
+                </a>
+                {% if departments %}
+                <table class="department-list">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Admin</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for department in departments %}
+                        <tr>
+                            <td>{{ department.name }}</td>
+                            <td>{{ department.code }}</td>
+                            <td>{{ department.admin.username }}</td>
+                            <td class="action-buttons">
+                                <button class="delete-btn" onclick="showDeleteConfirm('{{ department.pk }}', '{{ department.name }}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="empty-message">No departments added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{% url 'main_admin_dashboard' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function showDeleteConfirm(departmentId, departmentName) {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-backdrop fade show';
+            document.body.appendChild(overlay);
+            
+            const message = `Are you sure you want to delete the department "${departmentName}"? This action cannot be undone and will delete all associated data including teachers, classrooms, batches, divisions, subjects, and timetable entries.`;
+            
+            const dialog = document.createElement('div');
+            dialog.className = 'confirm-dialog';
+            dialog.innerHTML = `
+                <div class="confirm-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>${message}</span>
+                    <div class="confirm-buttons">
+                        <button class="btn-danger" onclick="deleteDepartment('${departmentId}')">Delete</button>
+                        <button class="btn-secondary" onclick="closeConfirmDialog()">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(dialog);
+        }
+
+        function closeConfirmDialog() {
+            const dialog = document.querySelector('.confirm-dialog');
+            const overlay = document.querySelector('.modal-backdrop');
+            if (dialog) dialog.remove();
+            if (overlay) overlay.remove();
+        }
+
+        function deleteDepartment(departmentId) {
+            window.location.href = `/departments/${departmentId}/delete/`;
+        }
+    </script>
+</body>
+</html> 

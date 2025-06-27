@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .timetable-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            margin: 0 auto;
+            table-layout: fixed;
+            min-width: 1000px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+            vertical-align: top;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        td {
+            background-color: #ffffff;
+            height: 100px;
+        }
+        tr:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+        .day-column {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+            width: 100px;
+        }
+        .subject-entry {
+            background-color: #e3f2fd;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .subject-entry.practical {
+            background-color: #fff3e0;
+        }
+        .subject-name {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 4px;
+        }
+        .practical .subject-name {
+            color: #f57c00;
+        }
+        .teacher-name {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 2px;
+        }
+        .room-info {
+            color: #2e7d32;
+            font-size: 0.85em;
+        }
+        .batch-info {
+            color: #d32f2f;
+            font-size: 0.85em;
+            margin-top: 2px;
+        }
+        .summary-table {
+            margin: 30px auto;
+            width: 80%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .summary-table th {
+            background-color: #4a90e2;
+        }
+        .summary-table td {
+            text-align: left;
+            height: auto;
+        }
+        .subject-hours {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 2px;
+        }
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+        @media print {
+            .back-button {
+                display: none;
+            }
+            body {
+                padding: 0;
+            }
+            .timetable-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>GOVERNMENT POLYTECHNIC, NASHIK</h1>
+    <h2>Time Table</h2>
+    
+    <div class="timetable-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    {% for slot in time_slots %}
+                    <th>{{ slot.start_time|time:"g:i A" }} - {{ slot.end_time|time:"g:i A" }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in days %}
+                <tr>
+                    <td class="day-column">{{ day }}</td>
+                    {% for slot in time_slots %}
+                    <td>
+                        {% for entry in timetable %}
+                            {% if entry.day == day and entry.time_slot == slot %}
+                                <div class="subject-entry {% if entry.subject.is_practical %}practical{% endif %}">
+                                    <div class="subject-name">{{ entry.subject.name }}</div>
+                                    <div class="teacher-name">{{ entry.teacher.name }}</div>
+                                    {% if entry.classroom %}
+                                        <div class="room-info">Room: {{ entry.classroom.name }}</div>
+                                    {% endif %}
+                                    {% if entry.lab %}
+                                        <div class="room-info">Lab: {{ entry.lab.name }}</div>
+                                    {% endif %}
+                                    {% if entry.batch %}
+                                        <div class="batch-info">Batch: {{ entry.batch.name }}</div>
+                                    {% endif %}
+                                    <div class="year-info">{{ entry.subject.year }}</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="summary-section">
+        <h2>Teaching Hours Distribution</h2>
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Faculty Name</th>
+                    <th>Subject Distribution</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teacher, subjects in teacher_subject_hours.items %}
+                <tr>
+                    <td><strong>{{ teacher }}</strong></td>
+                    <td>
+                        {% for subject, hours in subjects.items %}
+                            <span class="subject-hours">{{ subject }}: {{ hours }} hrs</span>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="{% url 'department_dashboard' %}" class="back-button">Return to Dashboard</a>
+        <a href="?print=true" class="back-button" style="margin-left: 10px; background-color: #28a745;">Print Detailed View</a>
+    </div>
+</body>
+</html>

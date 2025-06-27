@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subject Details - Timetable Generator</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-color: #2c3e50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .details-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .details-section {
+            margin-bottom: 25px;
+        }
+
+        .details-section h2 {
+            color: var(--text-color);
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .detail-label {
+            flex: 0 0 200px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .detail-value {
+            flex: 1;
+            color: #666;
+        }
+
+        .subject-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-right: 10px;
+        }
+
+        .subject-type.theory {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .subject-type.practical {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .edit-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .edit-btn:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 25px;
+            background: var(--text-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            background: #1a252f;
+            transform: translateY(-2px);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        /* Confirmation Dialog Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+        }
+
+        .custom-alert.confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1050;
+            width: 400px;
+            max-width: 90%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .confirm-content {
+            text-align: center;
+        }
+
+        .confirm-content i {
+            font-size: 2.5em;
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+
+        .confirm-content span {
+            display: block;
+            margin-bottom: 25px;
+            font-size: 1.2em;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .confirm-buttons button {
+            padding: 10px 25px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            min-width: 100px;
+            width: auto;
+        }
+
+        .confirm-buttons .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .confirm-buttons .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .confirm-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -48%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Subject Details</h1>
+        </div>
+
+        <div class="details-container">
+            <div class="details-section">
+                <h2>Basic Information</h2>
+                <div class="detail-row">
+                    <span class="detail-label">Subject Name</span>
+                    <span class="detail-value">{{ subject.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Subject Code</span>
+                    <span class="detail-value">{{ subject.code }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Year</span>
+                    <span class="detail-value">{{ subject.year }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Division</span>
+                    <span class="detail-value">{{ subject.division }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Subject Type</span>
+                    <span class="detail-value">
+                        {% if subject.is_theory %}
+                        <span class="subject-type theory">Theory</span>
+                        {% endif %}
+                        {% if subject.is_practical %}
+                        <span class="subject-type practical">Practical</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {% if subject.is_theory %}
+            <div class="details-section">
+                <h2>Theory Details</h2>
+                <div class="detail-row">
+                    <span class="detail-label">Lecture Hours per Week</span>
+                    <span class="detail-value">{{ subject.lecture_hours }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Theory Teacher</span>
+                    <span class="detail-value">{{ subject.theory_teacher }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if subject.is_practical %}
+            <div class="details-section">
+                <h2>Practical Details</h2>
+                <div class="detail-row">
+                    <span class="detail-label">Practical Hours per Week</span>
+                    <span class="detail-value">{{ subject.practical_hours }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Laboratory</span>
+                    <span class="detail-value">{{ subject.lab }}</span>
+                </div>
+                {% if batch_teacher_details %}
+                <div class="detail-row">
+                    <span class="detail-label">Batch-wise Practical Teachers</span>
+                    <span class="detail-value">
+                        <ul style="margin:0; padding-left:18px;">
+                        {% for item in batch_teacher_details %}
+                            <li><strong>{{ item.batch.name }}</strong>: {{ item.teacher.name }}</li>
+                        {% endfor %}
+                        </ul>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="action-buttons">
+                <a href="{% url 'edit_subject' subject.id %}" class="edit-btn">
+                    <i class="fas fa-edit"></i> Edit Subject
+                </a>
+                <form method="post" id="delete-form-{{ subject.id }}" action="{% url 'delete_subject' subject.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="button" class="delete-btn" onclick="confirmDelete('delete-form-{{ subject.id }}', 'Are you sure you want to delete subject {{ subject.name }}? This action cannot be undone.')">
+                        <i class="fas fa-trash"></i> Delete Subject
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="center">
+            <a href="{% url 'add_subject' %}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Subjects
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(formId, message) {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-backdrop fade show';
+            document.body.appendChild(overlay);
+            
+            const alert = document.createElement('div');
+            alert.className = 'custom-alert confirm-dialog';
+            alert.innerHTML = `
+                <div class="confirm-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>${message}</span>
+                    <div class="confirm-buttons">
+                        <button class="btn btn-danger" onclick="proceedDelete('${formId}')">Delete</button>
+                        <button class="btn btn-secondary" onclick="closeConfirmDialog()">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alert);
+            return false;
+        }
+
+        function closeConfirmDialog() {
+            const dialog = document.querySelector('.custom-alert.confirm-dialog');
+            const overlay = document.querySelector('.modal-backdrop');
+            if (dialog) dialog.remove();
+            if (overlay) overlay.remove();
+        }
+
+        function proceedDelete(formId) {
+            const form = document.getElementById(formId);
+            if (form) {
+                closeConfirmDialog();
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

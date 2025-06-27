@@ -1,0 +1,222 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Timetable Generator</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-color: #2c3e50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 3em;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .login-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: var(--danger-color);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .user-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .user-type-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .user-type-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .user-type-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="header">
+            <h1>Timetable Generator</h1>
+            <p>Login to manage your department</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="error-message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="user-type-selector">
+            <button class="user-type-btn {% if user_type == 'admin' and not request.GET.next %}active{% endif %}" onclick="setUserType('admin',event)">
+                <i class="fas fa-user-shield"></i> Admin
+            </button>
+            <button class="user-type-btn {% if user_type == 'department' or request.GET.next %}active{% endif %}" onclick="setUserType('department',event)">
+                <i class="fas fa-building"></i> Department
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <input type="hidden" name="user_type" id="user_type" value="{% if request.POST.next %}department{% else %}{{ user_type|default:'admin' }}{% endif %}">
+            
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            
+        </form>
+    </div>
+
+    <script>
+       function setUserType(type, event) {
+    event.preventDefault(); // <-- Add this line
+    document.getElementById('user_type').value = type;
+    
+    // Update active button
+    document.querySelectorAll('.user-type-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+    </script>
+</body>
+</html> 

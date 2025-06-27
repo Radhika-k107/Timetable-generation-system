@@ -1,0 +1,243 @@
+{% extends 'blank_base.html' %}
+{% load static %}
+{% load timetable_filters %}
+
+{% block content %}
+<style>
+    .department-header {
+        background: #2c3e50;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .department-header h2 {
+        margin: 0;
+        font-size: 2em;
+    }
+
+    .back-button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+    }
+
+    .back-button i {
+        margin-right: 8px;
+    }
+</style>
+
+<div class="container mt-4">
+    <a href="{% url 'main_admin_dashboard' %}" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <div class="department-header">
+        <h2>{{ department.name }} - Timetable</h2>
+    </div>
+
+    <!-- Include the timetable display section from manual_timetable.html -->
+    <div class="timetable-container">
+        {% for day in DAYS %}
+        <div class="day-section mb-4">
+            <h3 class="day-header">{{ day }}</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Branch</th>
+                            <th style="width: 90px;">Year</th>
+                            {% for slot in time_slots %}
+                            <th>{{ slot.start_time|time:"g:i A" }} - {{ slot.end_time|time:"g:i A" }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for division in divisions %}
+                        {% for year in division.year_set.all %}
+                        <tr>
+                            {% if forloop.first %}
+                            <td class="division-header" {% if division.year_set.count > 1 %}rowspan="{{ division.year_set.count }}"{% endif %}>
+                                {{ division.name }}
+                            </td>
+                            {% endif %}
+                            <td class="year-cell">{{ year.get_year_display }}</td>
+                            {% for slot in time_slots %}
+                            <td>
+                                {% for entry in timetable_entries %}
+                                    {% if entry.day == day and entry.time_slot == slot and entry.division.id == division.id and entry.subject.year.id == year.id %}
+                                        <div class="timetable-entry">
+                                            <strong>
+                                                <i class="fas fa-book"></i>
+                                                {{ entry.subject.name }}
+                                            </strong>
+                                            <div class="d-flex">
+                                                <i class="fas fa-user"></i>
+                                                {{ entry.teacher.name }}
+                                            </div>
+                                            {% if entry.classroom %}
+                                            <div class="d-flex">
+                                                <i class="fas fa-door-open"></i>
+                                                {{ entry.classroom.name }}
+                                            </div>
+                                            {% elif entry.lab %}
+                                            <div class="d-flex">
+                                                <i class="fas fa-flask"></i>
+                                                {{ entry.lab.name }}
+                                            </div>
+                                            {% endif %}
+                                            {% if entry.batch %}
+                                            <div class="d-flex">
+                                                <i class="fas fa-users"></i>
+                                                Batch: {{ entry.batch.name }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Include the necessary styles from manual_timetable.html -->
+<style>
+.timetable-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.day-header {
+    background: #3498db;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+.table thead th {
+    background: #34495e;
+    color: white;
+    font-weight: 500;
+    border: none;
+    padding: 12px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+}
+
+.table tbody td {
+    color: black;
+    padding: 15px;
+    vertical-align: middle;
+    border: 1px solid #eee;
+    min-width: 150px;
+}
+
+.division-header {
+    background: #2c3e50;
+    color: white;
+    font-weight: 500;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle !important;
+    width: 80px;
+    border-right: 2px solid #fff !important;
+    font-size: 0.9em;
+}
+
+.year-cell {
+    font-weight: 600;
+    color: #2c3e50;
+    background: #ecf0f1 !important;
+    text-align: center;
+    width: 90px;
+    vertical-align: middle !important;
+    border-right: 2px solid #ddd !important;
+    font-size: 0.9em;
+}
+
+.timetable-entry {
+    background: #E3F2FD;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.timetable-entry strong {
+    color: #1565C0;
+    font-size: 16px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.timetable-entry .d-flex {
+    color: #424242;
+    font-size: 14px;
+    margin-bottom: 6px;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.timetable-entry .d-flex:last-child {
+    margin-bottom: 0;
+}
+
+.timetable-entry i {
+    color: #1976D2;
+    width: 20px;
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.timetable-entry i.fa-book { color: #1976D2; }
+.timetable-entry i.fa-user { color: #4CAF50; }
+.timetable-entry i.fa-door-open,
+.timetable-entry i.fa-flask { color: #2196F3; }
+.timetable-entry i.fa-users { color: #4CAF50; }
+
+@media (max-width: 768px) {
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+    
+    .table td {
+        min-width: 120px;
+    }
+}
+</style>
+{% endblock %} 

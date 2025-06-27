@@ -1,0 +1,96 @@
+def save_timetable_entry(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        day = data['day']
+        time_slot = TimeSlot.objects.get(id=data['time_slot_id'])
+        division = Division.objects.get(id=data['division_id'])
+        year = Year.objects.get(id=data['year_id'])
+        subject = Subject.objects.get(id=data['subject_id'])
+        duration = time_slot.get_duration()
+        is_practical = data.get('is_practical', False)
+
+        if is_practical:
+            batch = Batch.objects.get(id=data['batch_id'])
+            lab = subject.lab
+            
+            # Get the specific teacher for this batch from practical_batch_teachers
+            teacher_id = subject.practical_batch_teachers.get(str(batch.id))
+            if not teacher_id:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'No teacher assigned for batch {batch.name}'
+                })
+            teacher = Teacher.objects.get(id=teacher_id)
+            
+            # Create the entry
+            entry = Timetable.objects.create(
+                subject=subject,
+                time_slot=time_slot,
+                division=division,
+                day=day,
+                teacher=teacher,
+                batch=batch,
+                lab=lab,
+                classroom=None
+            )
+            
+            # Calculate updated hours for this subject-batch combination
+            scheduled_hours = sum(
+                entry.time_slot.get_duration()
+                for entry in Timetable.objects.filter(subject=subject, batch=batch)
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Entry added successfully',
+                'entry_id': entry.id,
+                'teacher_name': teacher.name,
+                'lab_name': lab.name if lab else None,
+                'batch_name': batch.name,
+                'hours': {
+                    'scheduled': scheduled_hours,
+                    'total': subject.practical_hours
+                }
+            })
+        else:
+            # For theory subjects
+            if not subject.theory_teacher:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'No theory teacher assigned for subject {subject.name}'
+                })
+            
+            teacher = subject.theory_teacher
+            entry = Timetable.objects.create(
+                subject=subject,
+                time_slot=time_slot,
+                division=division,
+                day=day,
+                teacher=teacher,
+                batch=None,
+                lab=None,
+                classroom=year.classroom
+            )
+            
+            # Calculate updated hours for this subject
+            scheduled_hours = sum(
+                entry.time_slot.get_duration()
+                for entry in Timetable.objects.filter(subject=subject)
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Entry added successfully',
+                'entry_id': entry.id,
+                'teacher_name': teacher.name,
+                'classroom_name': year.classroom.name if year.classroom else None,
+                'hours': {
+                    'scheduled': scheduled_hours,
+                    'total': subject.lecture_hours
+                }
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })

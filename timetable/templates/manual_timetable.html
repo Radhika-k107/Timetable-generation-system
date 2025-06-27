@@ -1,0 +1,1498 @@
+{% extends 'blank_base.html' %}
+{% load static %}
+{% load timetable_filters %}
+
+{% block content %}
+{% csrf_token %}
+
+<!-- Add Font Awesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* Custom styles */
+.timetable-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #3498db;
+}
+
+.day-header {
+    background: #3498db;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+.table thead th {
+    background: #34495e;
+    color: white;
+    font-weight: 500;
+    border: none;
+    padding: 12px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+}
+
+.table tbody td {
+    padding: 15px;
+    vertical-align: middle;
+    border: 1px solid #eee;
+    min-width: 150px;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.division-header {
+    background: #2c3e50;
+    color: white;
+    font-weight: 500;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle !important;
+    width: 80px;
+    border-right: 2px solid #fff !important;
+    font-size: 0.9em;
+}
+
+.year-cell {
+    font-weight: 600;
+    color: #2c3e50;
+    background: #ecf0f1 !important;
+    text-align: center;
+    width: 90px;
+    vertical-align: middle !important;
+    border-right: 2px solid #ddd !important;
+    font-size: 0.9em;
+}
+
+.add-entry-btn {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.add-entry-btn:hover {
+    background: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.timetable-entry {
+    background: #E3F2FD;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    position: relative !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.delete-entry {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    color: #ff0000 !important;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    background: none;
+    border: none;
+    padding: 8px;
+    z-index: 2;
+    line-height: 1;
+}
+
+.delete-entry:hover {
+    color: #cc0000 !important;
+    transform: scale(1.1);
+}
+
+.timetable-entry strong {
+    display: flex;
+    align-items: center;
+    color: #1565C0;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    padding-right: 28px;
+}
+
+.timetable-entry strong i {
+    margin-right: 8px;
+    min-width: 16px;
+}
+
+.timetable-entry .d-flex {
+    color: #424242;
+    font-size: 14px;
+    margin-bottom: 6px;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.timetable-entry .d-flex:last-child {
+    margin-bottom: 0;
+}
+
+.timetable-entry i {
+    color: #1976D2;
+    width: 20px;
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.timetable-entry i.fa-trash-alt {
+    color: #ff0000 !important;
+}
+
+/* Modal styles */
+.modal-content {
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background: #3498db;
+    color: white;
+    border-radius: 10px 10px 0 0;
+    padding: 15px 20px;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-group label {
+    color: #2c3e50;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    border-radius: 5px;
+    border: 2px solid #ddd;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52,152,219,0.25);
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding: 15px 20px;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    border: none;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #3498db;
+    border: none;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Alert styles */
+.alert {
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border: none;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+    
+    .table td {
+        min-width: 120px;
+    }
+}
+
+/* Custom Alert Styles */
+.custom-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+    max-width: 400px;
+}
+
+.custom-alert.warning {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    color: #856404;
+}
+
+.custom-alert.error {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+    color: #721c24;
+}
+
+.custom-alert i {
+    margin-right: 12px;
+    font-size: 20px;
+}
+
+.custom-alert.warning i {
+    color: #ffc107;
+}
+
+.custom-alert.error i {
+    color: #dc3545;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Update confirm dialog styles */
+.custom-alert.confirm-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    z-index: 99999;
+    max-width: 450px;
+    width: 90%;
+    animation: fadeIn 0.3s ease-out;
+    border: none;
+}
+
+.confirm-content {
+    text-align: center;
+    padding: 10px;
+}
+
+.confirm-content i {
+    font-size: 32px;
+    color: #ffc107;
+    margin-bottom: 15px;
+}
+
+.confirm-content span {
+    display: block;
+    font-size: 16px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.confirm-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.confirm-buttons button {
+    padding: 10px 25px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    min-width: 100px;
+}
+
+.confirm-buttons .btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.confirm-buttons .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.confirm-buttons button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+</style>
+
+<div class="container mt-4">
+    <h2 class="page-title">Timetable Generation</h2>
+    
+    <!-- Delete All Entries Button and Back to Dashboard Button -->
+    <div class="mb-4 d-flex gap-2">
+        <a href="{% url 'delete_all_timetable_entries' %}" class="btn btn-danger" onclick="return confirmDeleteAll()">
+            <i class="fas fa-trash"></i> Delete All Entries
+        </a>
+        <a href="{% url 'department_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    
+    <!-- Timetable Display -->
+    <div class="timetable-container">
+        {% for day in DAYS %}
+        <div class="day-section mb-4">
+            <h3 class="day-header">{{ day }}</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Branch</th>
+                            <th style="width: 90px;">Year</th>
+                            {% for slot in time_slots %}
+                            <th>{{ slot.start_time|time:"g:i A" }} - {{ slot.end_time|time:"g:i A" }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for division in divisions %}
+                        {% for year in division.year_set.all %}
+                        <tr>
+                            {% if forloop.first %}
+                            <td class="division-header" {% if division.year_set.count > 1 %}rowspan="{{ division.year_set.count }}"{% endif %}>
+                                {{ division.name }}
+                            </td>
+                            {% endif %}
+                            <td class="year-cell">{{ year.get_year_display }}</td>
+                            {% for slot in time_slots %}
+                            <td data-day="{{ day }}" data-slot="{{ slot.id }}" data-division="{{ division.id }}" data-year="{{ year.id }}">
+                                <div class="timetable-entries">
+                                    {% for entry in timetable_entries %}
+                                        {% if entry.day == day and entry.time_slot == slot and entry.division.id == division.id and entry.subject.year.id == year.id %}
+                                            <div class="timetable-entry" id="entry-{{ entry.id }}">
+                                                <a href="#" class="delete-entry" onclick="deleteEntry({{ entry.id }}); return false;" title="Delete Entry">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </a>
+                                                <strong>
+                                                    <i class="fas fa-book"></i>
+                                                    {{ entry.subject.name }}
+                                                </strong>
+                                                <div class="d-flex">
+                                                    <i class="fas fa-user"></i>
+                                                    {{ entry.teacher.name }}
+                                                </div>
+                                                {% if entry.classroom %}
+                                                <div class="d-flex">
+                                                    <i class="fas fa-door-open"></i>
+                                                    {{ entry.classroom.name }}
+                                                </div>
+                                                {% elif entry.lab %}
+                                                <div class="d-flex">
+                                                    <i class="fas fa-flask"></i>
+                                                    {{ entry.lab.name }}
+                                                </div>
+                                                {% endif %}
+                                                {% if entry.batch %}
+                                                <div class="d-flex">
+                                                    <i class="fas fa-users"></i>
+                                                    Batch: {{ entry.batch.name }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <button class="btn btn-sm add-entry-btn" 
+                                        onclick="showAddEntryModal('{{ day }}', '{{ slot.id }}', '{{ division.id }}', '{{ year.id }}')">
+                                    <i class="fas fa-plus"></i> Add Entry
+                                </button>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Entry Modal -->
+<div class="modal fade" id="addEntryModal" tabindex="-1" aria-labelledby="addEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Timetable Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="day" id="modalDay">
+                <input type="hidden" name="time_slot" id="modalTimeSlot">
+                <input type="hidden" name="division" id="modalDivision">
+                <input type="hidden" name="year" id="modalYear">
+                <input type="hidden" name="is_practical" id="modalIsPractical">
+                
+                <!-- For 1-hour slots (lectures) -->
+                <div id="lectureEntry" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Subject</label>
+                        <select class="form-control subject-select" required>
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                            {% if subject.is_theory %}
+                            <option value="{{ subject.id }}" 
+                                    data-is-theory="{{ subject.is_theory }}"
+                                    data-is-practical="{{ subject.is_practical }}"
+                                    data-year="{{ subject.year.id }}"
+                                    data-division="{{ subject.division.id }}"
+                                    data-name="{{ subject.name }}"
+                                    data-code="{{ subject.code }}"
+                                    data-teacher="{{ subject.theory_teacher.name }}"
+                                    data-classroom="{{ subject.year.classroom.name }}"
+                                    data-scheduled="{{ subject_hours|get_item:subject.id|get_item:'scheduled'|default:0 }}"
+                                    data-total="{{ subject.lecture_hours|default:0 }}">
+                                {{ subject.name }} ({{ subject.code }}) - {{ subject_hours|get_item:subject.id|get_item:'scheduled'|default:0 }}/{{ subject.lecture_hours|default:0 }} hours
+                            </option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div id="lectureSubjectDetails" class="mt-3" style="display: none;">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-book me-2"></i>
+                                        <h5 class="card-title mb-0" id="lectureSubjectName"></h5>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-user me-2"></i>
+                                        <span id="lectureTeacherName"></span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-door-open me-2"></i>
+                                        <span id="lectureClassroom"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="lectureHoursInfo" class="mt-2">
+                            <div class="alert alert-info">
+                                <strong>Hours Information:</strong><br>
+                                Scheduled: <span id="scheduledHours">0</span> hours<br>
+                                Total Required: <span id="totalHours">0</span> hours<br>
+                                Remaining: <span id="remainingHours">0</span> hours
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- For 2-hour slots (practicals) -->
+                <div id="practicalEntries" style="display: none;">
+                    <div class="form-group">
+                        <label>Select Batch</label>
+                        <select class="form-control" id="batchSelect" required>
+                            <option value="">Select Batch</option>
+                            {% for batch in batches %}
+                            <option value="{{ batch.id }}" data-division="{{ batch.divisions.first.id }}">{{ batch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Select Subject</label>
+                        <select class="form-control subject-select" required>
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                                {% if subject.is_practical %}
+                                    {% for batch in subject.batches.all %}
+                                    {% with batch_teacher=subject.practical_batch_teachers|get_item:batch.id %}
+                                    <option value="{{ subject.id }}" 
+                                            data-batch="{{ batch.id }}"
+                                            data-batch-name="{{ batch.name }}"
+                                            data-is-theory="{{ subject.is_theory }}"
+                                            data-is-practical="{{ subject.is_practical }}"
+                                            data-year="{{ subject.year.id }}"
+                                            data-division="{{ subject.division.id }}"
+                                            data-name="{{ subject.name }}"
+                                            data-code="{{ subject.code }}"
+                                            data-teacher="{{ batch_teacher|default:'' }}"
+                                            data-teacher-id="{{ batch_teacher|default:'' }}"
+                                            data-lab="{{ subject.lab.name }}"
+                                            data-scheduled="{{ subject_hours|get_item:subject.id|get_item:'batch_hours'|get_item:batch.id|get_item:'scheduled'|default:0 }}"
+                                            data-total="{{ subject.practical_hours|default:0 }}">
+                                                {{ subject.name }} ({{ subject.code }}) - Batch {{ batch.name }}: {{ subject_hours|get_item:subject.id|get_item:'batch_hours'|get_item:batch.id|get_item:'scheduled'|default:0 }}/{{ subject.practical_hours|default:0 }} hours
+                                            </option>
+                                    {% endwith %}
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div id="practicalSubjectDetails" class="mt-3" style="display: none;">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-book me-2"></i>
+                                        <h5 class="card-title mb-0" id="practicalSubjectName"></h5>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-user me-2"></i>
+                                        <span id="practicalTeacherName"></span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-flask me-2"></i>
+                                        <span id="practicalLab"></span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-users me-2"></i>
+                                        <span id="practicalBatch"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="practicalHoursInfo" class="mt-2">
+                            <div class="alert alert-info">
+                                <strong>Hours Information:</strong><br>
+                                Scheduled: <span id="scheduledHours">0</span> hours<br>
+                                Total Required: <span id="totalHours">0</span> hours<br>
+                                Remaining: <span id="remainingHours">0</span> hours
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addEntry()">Add Entry</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to show the add entry modal
+    window.showAddEntryModal = function(day, timeSlot, division, year) {
+        console.log('Opening modal for:', {day, timeSlot, division, year});
+        
+        // Get the modal element
+        const modalElement = document.getElementById('addEntryModal');
+        if (!modalElement) {
+            console.error('Modal element not found');
+            return;
+        }
+        
+        // Set hidden fields
+        document.getElementById('modalDay').value = day;
+        document.getElementById('modalTimeSlot').value = timeSlot;
+        document.getElementById('modalDivision').value = division;
+        document.getElementById('modalYear').value = year;
+        
+        // Get slot duration
+        const cell = document.querySelector(`td[data-day="${day}"][data-slot="${timeSlot}"]`);
+        if (!cell) {
+            console.error('Cell not found');
+            return;
+        }
+        
+        const timeHeader = document.querySelector(`th:nth-child(${Array.from(cell.parentNode.children).indexOf(cell) + 1})`);
+        if (!timeHeader) {
+            console.error('Time header not found');
+            return;
+        }
+        
+        const slotText = timeHeader.textContent.trim();
+        console.log('Slot text:', slotText);
+        
+        // Parse the time slot text to get duration
+        const [startTime, endTime] = slotText.split(' - ').map(t => t.trim());
+        
+        // Convert times to 24-hour format for calculation
+        const parseTime = (timeStr) => {
+            const [time, period] = timeStr.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            return hours + (minutes || 0) / 60;
+        };
+        
+        const startHour = parseTime(startTime);
+        const endHour = parseTime(endTime);
+        const duration = endHour - startHour;
+        console.log('Duration:', duration);
+        
+        // Set is_practical and show/hide appropriate forms
+        const isPractical = Math.abs(duration - 2) < 0.1; // Check if duration is approximately 2 hours
+        document.getElementById('modalIsPractical').value = isPractical;
+        
+        const lectureEntry = document.getElementById('lectureEntry');
+        const practicalEntries = document.getElementById('practicalEntries');
+        
+        if (isPractical) {
+            lectureEntry.style.display = 'none';
+            practicalEntries.style.display = 'block';
+            
+            // Reset selections
+            document.getElementById('batchSelect').value = '';
+            const subjectSelect = practicalEntries.querySelector('.subject-select');
+            subjectSelect.value = '';
+            
+            // Filter subjects for practicals
+            Array.from(subjectSelect.options).forEach(option => {
+                if (option.value === '') return;
+                
+                const subjectYear = option.dataset.year;
+                const subjectDivision = option.dataset.division;
+                const isSubjectPractical = option.dataset.isPractical === 'True';
+                
+                // Show only practical subjects for the selected year and division
+                const shouldShow = 
+                    subjectYear === year && 
+                    subjectDivision === division && 
+                    isSubjectPractical;
+                
+                option.style.display = shouldShow ? '' : 'none';
+                
+                // Log for debugging
+                console.log('Practical subject:', {
+                    name: option.dataset.name,
+                    year: subjectYear,
+                    division: subjectDivision,
+                    shouldShow
+                });
+            });
+            
+            // Show/hide batch options based on division
+            const batchSelect = document.getElementById('batchSelect');
+            Array.from(batchSelect.options).forEach(option => {
+                if (option.value === '') return;
+                const batchDivision = option.dataset.division;
+                option.style.display = (batchDivision === division) ? '' : 'none';
+            });
+            
+            // Update practical subject details if any subject is selected
+            if (subjectSelect.value) {
+                updateSubjectDetails(subjectSelect);
+                updateHoursInfo(subjectSelect, document.getElementById('practicalHoursInfo'));
+            }
+        } else {
+            lectureEntry.style.display = 'block';
+            practicalEntries.style.display = 'none';
+            
+            // Reset selection
+            const select = lectureEntry.querySelector('.subject-select');
+            select.value = '';
+            
+            // Filter subjects for lecture
+            Array.from(select.options).forEach(option => {
+                if (option.value === '') return;
+                
+                const subjectYear = option.dataset.year;
+                const subjectDivision = option.dataset.division;
+                const isSubjectTheory = option.dataset.isTheory === 'True';
+                
+                // Show only theory subjects for the selected year and division
+                const shouldShow = 
+                    subjectYear === year && 
+                    subjectDivision === division && 
+                    isSubjectTheory;
+                
+                option.style.display = shouldShow ? '' : 'none';
+                
+                // Log for debugging
+                console.log('Theory subject:', {
+                    name: option.dataset.name,
+                    year: subjectYear,
+                    division: subjectDivision,
+                    shouldShow
+                });
+            });
+            
+            // Update lecture subject details if any subject is selected
+            if (select.value) {
+                updateSubjectDetails(select);
+                updateHoursInfo(select, document.getElementById('lectureHoursInfo'));
+            }
+        }
+        
+        // Show modal using Bootstrap 5
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    };
+});
+
+// Function to add entry to the timetable
+function addEntry() {
+    const day = document.getElementById('modalDay').value;
+    const timeSlot = document.getElementById('modalTimeSlot').value;
+    const division = document.getElementById('modalDivision').value;
+    const year = document.getElementById('modalYear').value;
+    const isPractical = document.getElementById('modalIsPractical').value === 'true';
+    
+    const clickedCell = document.querySelector(`td[data-day="${day}"][data-slot="${timeSlot}"][data-division="${division}"][data-year="${year}"]`);
+    if (!clickedCell) return;
+    
+    const entriesContainer = clickedCell.querySelector('.timetable-entries');
+    
+    if (isPractical) {
+        // Add entry for practical slot
+        const batchSelect = document.getElementById('batchSelect');
+        const subjectSelect = document.querySelector('#practicalEntries .subject-select');
+        
+        if (batchSelect.value && subjectSelect.value) {
+            const selectedBatch = batchSelect.options[batchSelect.selectedIndex];
+            const selectedSubject = subjectSelect.options[subjectSelect.selectedIndex];
+            
+            // Check if required hours are completed
+            const scheduledHours = parseInt(selectedSubject.dataset.scheduled) || 0;
+            const totalHours = parseInt(selectedSubject.dataset.total) || 0;
+            
+            if (scheduledHours >= totalHours) {
+                showCustomAlert(`Warning: Required hours (${totalHours}) for ${selectedSubject.dataset.name} are already completed!`, 'warning', 3000);
+                return;
+            }
+            
+            // Check for lab conflicts
+            const labId = selectedSubject.dataset.lab;
+            const allEntries = document.querySelectorAll(`td[data-day="${day}"][data-slot="${timeSlot}"] .timetable-entry`);
+            let hasLabConflict = false;
+            
+            allEntries.forEach(entry => {
+                const labElement = entry.querySelector('.fa-flask');
+                if (labElement && labElement.nextSibling.textContent.trim() === labId) {
+                    hasLabConflict = true;
+                }
+            });
+            
+            if (hasLabConflict) {
+                showCustomAlert('This lab is already in use during this time slot!', 'warning', 3000);
+                return;
+            }
+
+            // Check for teacher conflicts
+            const teacherName = selectedSubject.dataset.teacher;
+            const currentSlotIndex = Array.from(document.querySelectorAll('th')).indexOf(
+                document.querySelector(`th:nth-child(${Array.from(clickedCell.parentNode.children).indexOf(clickedCell) + 1})`)
+            );
+            
+            // Get all cells in the same day
+            const dayCells = document.querySelectorAll(`td[data-day="${day}"]`);
+            let hasTeacherConflict = false;
+            
+            dayCells.forEach(cell => {
+                const cellSlotIndex = Array.from(document.querySelectorAll('th')).indexOf(
+                    document.querySelector(`th:nth-child(${Array.from(cell.parentNode.children).indexOf(cell) + 1})`)
+                );
+                
+                // Check if the time slots overlap
+                const isOverlapping = Math.abs(cellSlotIndex - currentSlotIndex) <= 1;
+                
+                if (isOverlapping) {
+                    const entries = cell.querySelectorAll('.timetable-entry');
+                    entries.forEach(entry => {
+                        // Check for teacher conflict
+                        const teacherElement = entry.querySelector('.fa-user');
+                        if (teacherElement && teacherElement.nextSibling.textContent.trim() === teacherName) {
+                            hasTeacherConflict = true;
+                        }
+                    });
+                }
+            });
+            
+            if (hasTeacherConflict) {
+                showCustomAlert(`Teacher ${teacherName} is already scheduled for another class during this time slot!`, 'warning', 3000);
+                return;
+            }
+
+            // Check for batch conflict in the same slot
+            let hasBatchConflict = false;
+            allEntries.forEach(entry => {
+                const batchElement = entry.querySelector('.fa-users');
+                const yearElement = entry.querySelector('.year-info');
+                if (batchElement && 
+                    batchElement.nextSibling.textContent.trim().includes(selectedBatch.text.trim()) && 
+                    yearElement && 
+                    yearElement.textContent.trim() === selectedSubject.dataset.year) {
+                    hasBatchConflict = true;
+                }
+            });
+            if (hasBatchConflict) {
+                showCustomAlert('This batch already has a practical scheduled in this time slot!', 'warning', 3000);
+                return;
+            }
+            
+            // Prepare data for saving
+            const data = {
+                day: day,
+                time_slot_id: timeSlot,
+                division_id: division,
+                year_id: year,
+                subject_id: selectedSubject.value,
+                batch_id: batchSelect.value,
+                is_practical: true
+            };
+            
+            // Save entry
+            fetch('{% url "save_timetable_entry" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Update the display with detailed information
+                    const entryHtml = `
+                        <div class="timetable-entry" id="entry-${result.entry_id}">
+                            <a href="#" class="delete-entry" onclick="deleteEntry(${result.entry_id}); return false;" title="Delete Entry">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                            <strong>
+                                <i class="fas fa-book"></i>
+                                ${selectedSubject.dataset.name}
+                            </strong>
+                            <div class="d-flex">
+                                <i class="fas fa-user"></i>
+                                ${result.teacher_name || selectedSubject.dataset.teacher}
+                            </div>
+                            <div class="d-flex">
+                                <i class="fas fa-flask"></i>
+                                ${selectedSubject.dataset.lab}
+                            </div>
+                            <div class="d-flex">
+                                <i class="fas fa-users"></i>
+                                ${selectedBatch.text}
+                            </div>
+                        </div>`;
+                    
+                    entriesContainer.insertAdjacentHTML('beforeend', entryHtml);
+                    
+                    // Update hours information
+                    selectedSubject.dataset.scheduled = result.hours.scheduled;
+                    selectedSubject.textContent = `${selectedSubject.dataset.name} (${selectedSubject.dataset.code}) - ${result.hours.scheduled}/${result.hours.total} hours`;
+                    
+                    // Update hours info display
+                    const hoursInfo = document.getElementById('practicalHoursInfo');
+                    if (hoursInfo) {
+                        const remaining = result.hours.total - result.hours.scheduled;
+                        const alertClass = remaining <= 0 ? 'alert-danger' : 
+                                         (remaining <= 2 ? 'alert-warning' : 'alert-success');
+                        
+                        hoursInfo.innerHTML = `
+                            <div class="alert ${alertClass}">
+                                <strong>Hours Information:</strong><br>
+                                Scheduled: ${result.hours.scheduled} hours<br>
+                                Total Required: ${result.hours.total} hours<br>
+                                Remaining: ${remaining} hours
+                            </div>
+                        `;
+                    }
+                    
+                    showCustomAlert('Entry added successfully!', 'success', 1);
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addEntryModal'));
+                    modal.hide();
+                    // Smooth page reload after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1);
+                } else {
+                    showCustomAlert(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showCustomAlert('An error occurred while saving the entry', 'error');
+            });
+        }
+    } else {
+        // Add single entry for lecture slots
+        const select = document.querySelector('#lectureEntry .subject-select');
+        if (select.value) {
+            const selectedOption = select.options[select.selectedIndex];
+            
+            // Check if required hours are completed
+            const scheduledHours = parseInt(selectedOption.dataset.scheduled) || 0;
+            const totalHours = parseInt(selectedOption.dataset.total) || 0;
+            
+            if (scheduledHours >= totalHours) {
+                showCustomAlert(`Warning: Required hours (${totalHours}) for ${selectedOption.dataset.name} are already completed!`, 'warning', 3000);
+                return;
+            }
+            
+            // Check for teacher conflicts
+            const teacherName = selectedOption.dataset.teacher;
+            const currentSlotIndex = Array.from(document.querySelectorAll('th')).indexOf(
+                document.querySelector(`th:nth-child(${Array.from(clickedCell.parentNode.children).indexOf(clickedCell) + 1})`)
+            );
+            
+            // Get all cells in the same day
+            const dayCells = document.querySelectorAll(`td[data-day="${day}"]`);
+            let hasTeacherConflict = false;
+            let hasTimeSlotConflict = false;
+            
+            dayCells.forEach(cell => {
+                const cellSlotIndex = Array.from(document.querySelectorAll('th')).indexOf(
+                    document.querySelector(`th:nth-child(${Array.from(cell.parentNode.children).indexOf(cell) + 1})`)
+                );
+                
+                // Check if the time slots overlap
+                const isOverlapping = Math.abs(cellSlotIndex - currentSlotIndex) <= 1;
+                
+                if (isOverlapping) {
+                    const entries = cell.querySelectorAll('.timetable-entry');
+                    entries.forEach(entry => {
+                        // Check for teacher conflict
+                        const teacherElement = entry.querySelector('.fa-user');
+                        if (teacherElement && teacherElement.nextSibling.textContent.trim() === teacherName) {
+                            hasTeacherConflict = true;
+                        }
+                    });
+                }
+            });
+            
+            if (hasTeacherConflict) {
+                showCustomAlert(`Teacher ${teacherName} is already scheduled for another class during this time slot!`, 'warning', 3000);
+                return;
+            }
+            
+            // Check for time slot conflict for lectures only
+            dayCells.forEach(cell => {
+                const cellSlotIndex = Array.from(document.querySelectorAll('th')).indexOf(
+                    document.querySelector(`th:nth-child(${Array.from(cell.parentNode.children).indexOf(cell) + 1})`)
+                );
+                const isOverlapping = Math.abs(cellSlotIndex - currentSlotIndex) <= 1;
+                if (isOverlapping) {
+                    const entries = cell.querySelectorAll('.timetable-entry');
+                    entries.forEach(entry => {
+                        // Time slot conflict for lectures:
+                        const cellYear = cell.getAttribute('data-year');
+                        const cellDivision = cell.getAttribute('data-division');
+                        if (cellYear === year && cellDivision === division) {
+                            hasTimeSlotConflict = true;
+                        }
+                    });
+                }
+            });
+            
+            if (hasTimeSlotConflict) {
+                showCustomAlert('This time slot is already occupied for the same year and division!', 'warning', 3000);
+                return;
+            }
+            
+            // Prepare data for saving
+            const data = {
+                day: day,
+                time_slot_id: timeSlot,
+                division_id: division,
+                year_id: year,
+                subject_id: selectedOption.value,
+                is_practical: false
+            };
+            
+            // Save entry
+            fetch('{% url "save_timetable_entry" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Update the display with detailed information
+                    const entryHtml = `
+                        <div class="timetable-entry" id="entry-${result.entry_id}">
+                            <a href="#" class="delete-entry" onclick="deleteEntry(${result.entry_id}); return false;" title="Delete Entry">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                            <strong>
+                                <i class="fas fa-book"></i>
+                                ${selectedOption.dataset.name}
+                            </strong>
+                            <div class="d-flex">
+                                <i class="fas fa-user"></i>
+                                ${selectedOption.dataset.teacher}
+                            </div>
+                            <div class="d-flex">
+                                <i class="fas fa-door-open"></i>
+                                ${selectedOption.dataset.classroom}
+                            </div>
+                        </div>`;
+                    
+                    entriesContainer.insertAdjacentHTML('beforeend', entryHtml);
+                    
+                    // Update hours information
+                    selectedOption.dataset.scheduled = result.hours.scheduled;
+                    selectedOption.textContent = `${selectedOption.dataset.name} (${selectedOption.dataset.code}) - ${result.hours.scheduled}/${result.hours.total} hours`;
+                    
+                    // Update hours info display
+                    const hoursInfo = document.getElementById('lectureHoursInfo');
+                    if (hoursInfo) {
+                        const remaining = result.hours.total - result.hours.scheduled;
+                        const alertClass = remaining <= 0 ? 'alert-danger' : 
+                                         (remaining <= 2 ? 'alert-warning' : 'alert-success');
+                        
+                        hoursInfo.innerHTML = `
+                            <div class="alert ${alertClass}">
+                                <strong>Hours Information:</strong><br>
+                                Scheduled: ${result.hours.scheduled} hours<br>
+                                Total Required: ${result.hours.total} hours<br>
+                                Remaining: ${remaining} hours
+                            </div>
+                        `;
+                    }
+                    
+                    showCustomAlert('Entry added successfully!', 'success', 1);
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addEntryModal'));
+                    modal.hide();
+                    // Smooth page reload after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1);
+                } else {
+                    showCustomAlert(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showCustomAlert('An error occurred while saving the entry', 'error');
+            });
+        }
+    }
+}
+
+// Function to edit an existing entry
+function editEntry(entryElement, day, timeSlot, division, year, isPractical) {
+    // Set hidden fields
+    document.getElementById('modalDay').value = day;
+    document.getElementById('modalTimeSlot').value = timeSlot;
+    document.getElementById('modalDivision').value = division;
+    document.getElementById('modalYear').value = year;
+    document.getElementById('modalIsPractical').value = isPractical;
+    
+    const lectureEntry = document.getElementById('lectureEntry');
+    const practicalEntries = document.getElementById('practicalEntries');
+    
+    if (isPractical) {
+        lectureEntry.style.display = 'none';
+        practicalEntries.style.display = 'block';
+        
+        // Reset selections
+        document.getElementById('batchSelect').value = '';
+        const subjectSelect = practicalEntries.querySelector('.subject-select');
+        subjectSelect.value = '';
+        
+        // Filter subjects for practicals
+        Array.from(subjectSelect.options).forEach(option => {
+            if (option.value === '') return;
+            const subjectYear = option.dataset.year;
+            const isSubjectPractical = option.dataset.isPractical === 'True';
+            
+            // Show only practical subjects for the selected year
+            option.style.display = (subjectYear === year && isSubjectPractical) ? '' : 'none';
+        });
+    } else {
+        lectureEntry.style.display = 'block';
+        practicalEntries.style.display = 'none';
+        
+        // Reset selection
+        const select = lectureEntry.querySelector('.subject-select');
+        select.value = '';
+        
+        // Filter subjects for lecture
+        Array.from(select.options).forEach(option => {
+            if (option.value === '') return;
+            const subjectYear = option.dataset.year;
+            const isSubjectTheory = option.dataset.isTheory === 'True';
+            
+            // Show only theory subjects for the selected year
+            option.style.display = (subjectYear === year && isSubjectTheory) ? '' : 'none';
+        });
+    }
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addEntryModal'));
+    modal.show();
+}
+
+// Function to update subject details
+function updateSubjectDetails(select) {
+    const selectedOption = select.options[select.selectedIndex];
+    if (!selectedOption.value) return;
+
+    const isPractical = select.closest('#practicalEntries');
+    const detailsDiv = document.getElementById(isPractical ? 'practicalSubjectDetails' : 'lectureSubjectDetails');
+    
+    if (isPractical) {
+        document.getElementById('practicalSubjectName').textContent = `${selectedOption.dataset.name} (${selectedOption.dataset.code})`;
+        document.getElementById('practicalTeacherName').textContent = selectedOption.dataset.teacher;
+        document.getElementById('practicalLab').textContent = selectedOption.dataset.lab;
+        document.getElementById('practicalBatch').textContent = `Batch: ${selectedOption.dataset.batchName}`;
+    } else {
+        document.getElementById('lectureSubjectName').textContent = `${selectedOption.dataset.name} (${selectedOption.dataset.code})`;
+        document.getElementById('lectureTeacherName').textContent = selectedOption.dataset.teacher;
+        document.getElementById('lectureClassroom').textContent = selectedOption.dataset.classroom;
+    }
+    
+    detailsDiv.style.display = 'block';
+}
+
+// Function to update hours information
+function updateHoursInfo(select, hoursInfo) {
+    const selectedOption = select.options[select.selectedIndex];
+    if (!selectedOption) return;
+    
+    const scheduled = parseInt(selectedOption.dataset.scheduled) || 0;
+    const total = parseInt(selectedOption.dataset.total) || 0;
+    const remaining = total - scheduled;
+    
+    const alertClass = remaining <= 0 ? 'alert-danger' : (remaining <= 2 ? 'alert-warning' : 'alert-success');
+    
+    hoursInfo.innerHTML = `
+        <div class="alert ${alertClass}">
+            <strong>Hours Information:</strong><br>
+            Scheduled: ${scheduled} hours<br>
+            Total Required: ${total} hours<br>
+            Remaining: ${remaining} hours
+        </div>
+    `;
+}
+
+// Add event listeners for batch and subject selection
+document.addEventListener('change', function(e) {
+    if (e.target.id === 'batchSelect') {
+        const batchId = e.target.value;
+        const subjectSelect = document.querySelector('#practicalEntries .subject-select');
+        const year = document.getElementById('modalYear').value;
+        
+        // Show only subjects for the selected batch and year
+        Array.from(subjectSelect.options).forEach(option => {
+            if (option.value === '') return;
+            const subjectYear = option.dataset.year;
+            const isSubjectPractical = option.dataset.isPractical === 'True';
+            
+            option.style.display = (option.dataset.batch === batchId && 
+                                  subjectYear === year && 
+                                  isSubjectPractical) ? '' : 'none';
+        });
+        
+        // Reset subject selection
+        subjectSelect.value = '';
+        document.getElementById('practicalSubjectDetails').style.display = 'none';
+    }
+    
+    if (e.target.classList.contains('subject-select')) {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        
+        if (selectedOption.value) {
+            updateSubjectDetails(e.target);
+            if (e.target.closest('#lectureEntry')) {
+                updateHoursInfo(e.target, document.getElementById('lectureHoursInfo'));
+            } else if (e.target.closest('#practicalEntries')) {
+                updateHoursInfo(e.target, document.getElementById('practicalHoursInfo'));
+            }
+        }
+    }
+});
+
+// Update the existing styles
+const style = document.createElement('style');
+style.textContent = `
+    .timetable-entry {
+        background: #E3F2FD;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 8px;
+        cursor: pointer;
+    }
+    
+    .timetable-entry:hover {
+        background: #BBDEFB;
+    }
+    
+    .timetable-entry strong {
+        color: #1565C0;
+        font-size: 16px;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 8px;
+    }
+    
+    .timetable-entry .d-flex {
+        color: #424242;
+        font-size: 14px;
+        margin-bottom: 6px;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .timetable-entry .d-flex:last-child {
+        margin-bottom: 0;
+    }
+
+    .timetable-entry i {
+        color: #1976D2;
+        width: 20px;
+        margin-right: 8px;
+        font-size: 16px;
+    }
+
+    .timetable-entry i.fa-book {
+        color: #1976D2;
+    }
+
+    .timetable-entry i.fa-user {
+        color: #4CAF50;
+    }
+
+    .timetable-entry i.fa-door-open,
+    .timetable-entry i.fa-flask {
+        color: #2196F3;
+    }
+
+    .timetable-entry i.fa-users {
+        color: #4CAF50;
+    }
+
+    .table tbody td {
+        padding: 8px;
+        vertical-align: top;
+    }
+
+    .add-entry-btn {
+        background: #1976D2;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+        transition: all 0.2s ease;
+    }
+
+    .add-entry-btn:hover {
+        background: #1565C0;
+    }
+`;
+document.head.appendChild(style);
+
+// Function to show custom alert
+function showCustomAlert(message, type = 'warning', duration = 5000) {
+    // Remove any existing alerts
+    const existingAlert = document.querySelector('.custom-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+
+    // Create new alert
+    const alert = document.createElement('div');
+    alert.className = `custom-alert ${type}`;
+    
+    // Add icon based on type
+    let icon = 'fa-exclamation-triangle';
+    if (type === 'error') {
+        icon = 'fa-exclamation-circle';
+    } else if (type === 'success') {
+        icon = 'fa-check-circle';
+    } else if (type === 'info') {
+        icon = 'fa-info-circle';
+    }
+    
+    alert.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+    `;
+
+    // Add to document
+    document.body.appendChild(alert);
+
+    // Auto remove after specified duration
+    setTimeout(() => {
+        alert.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => alert.remove(), 300);
+    }, duration);
+}
+
+// Update the confirm dialog function
+function confirmDeleteAll() {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop fade show';
+    document.body.appendChild(overlay);
+    
+    const message = 'Are you sure you want to delete all timetable entries? This action cannot be undone.';
+    const alert = document.createElement('div');
+    alert.className = 'custom-alert confirm-dialog';
+    alert.innerHTML = `
+        <div class="confirm-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>${message}</span>
+            <div class="confirm-buttons">
+                <button class="btn btn-danger" onclick="deleteAllEntries()">Delete</button>
+                <button class="btn btn-secondary" onclick="closeConfirmDialog()">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(alert);
+    return false;
+}
+
+function closeConfirmDialog() {
+    const dialog = document.querySelector('.custom-alert.confirm-dialog');
+    const overlay = document.querySelector('.modal-backdrop');
+    if (dialog) dialog.remove();
+    if (overlay) overlay.remove();
+}
+
+function deleteAllEntries() {
+    window.location.href = "{% url 'delete_all_timetable_entries' %}";
+}
+
+function deleteEntry(entryId) {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop fade show';
+    document.body.appendChild(overlay);
+    
+    const message = 'Are you sure you want to delete this entry? This action cannot be undone.';
+    const alert = document.createElement('div');
+    alert.className = 'custom-alert confirm-dialog';
+    alert.innerHTML = `
+        <div class="confirm-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>${message}</span>
+            <div class="confirm-buttons">
+                <button class="btn btn-danger" onclick="proceedDeleteEntry(${entryId})">Delete</button>
+                <button class="btn btn-secondary" onclick="closeConfirmDialog()">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(alert);
+    return false;
+}
+
+function proceedDeleteEntry(entryId) {
+    fetch(`/delete-timetable-entry/${entryId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showCustomAlert('Entry deleted successfully!', 'success', 1);
+            // Close the confirmation dialog
+            closeConfirmDialog();
+            // Smooth page reload after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1);
+        } else {
+            closeConfirmDialog();
+            showCustomAlert('Failed to delete entry. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        closeConfirmDialog();
+        showCustomAlert('An error occurred while deleting the entry.', 'error');
+    });
+}
+</script>
+{% endblock %}
+
+{% endblock %} 

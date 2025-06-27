@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Subject - Timetable Generator</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-color: #2c3e50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section h2 {
+            color: var(--text-color);
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .checkbox-group {
+            margin: 15px 0;
+            padding: 15px;
+            background: var(--secondary-color);
+            border-radius: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+
+        .hidden-fields {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--secondary-color);
+            border-radius: 8px;
+        }
+
+        .show {
+            display: block;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .save-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .save-btn:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 25px;
+            background: var(--text-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            background: #1a252f;
+            transform: translateY(-2px);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Edit Subject</h1>
+        </div>
+
+        <div class="form-container">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-section">
+                    <h2>Basic Information</h2>
+                    <div class="form-group">
+                        <label for="id_name">Subject Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_code">Subject Code</label>
+                        {{ form.code }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_year">Year</label>
+                        {{ form.year }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_division">Division</label>
+                        {{ form.division }}
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Subject Type</h2>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="id_is_theory" name="is_theory" {% if form.is_theory.value %}checked{% endif %}> Theory Subject
+                        </label>
+                        <div id="theory_fields" class="hidden-fields">
+                            <div class="form-group">
+                                <label for="id_lecture_hours">Theory Hours per Week</label>
+                                {{ form.lecture_hours }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_theory_teacher">Theory Teacher</label>
+                                {{ form.theory_teacher }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group" style="margin-top: 20px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="id_is_practical" name="is_practical" {% if form.is_practical.value %}checked{% endif %}> Practical Subject
+                        </label>
+                        <div id="practical_fields" class="hidden-fields">
+                            <div class="form-group">
+                                <label for="id_practical_hours">Practical Hours per Week</label>
+                                {{ form.practical_hours }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_lab">Laboratory</label>
+                                {{ form.lab }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_practical_teacher">Practical Teacher</label>
+                                {{ form.practical_teacher }}
+                            </div>
+                            <div class="form-group">
+                                <label>Batches</label>
+                                    {{ form.batches }}
+                            </div>
+                            <div id="batchTeachersForm" style="display: none;">
+                                <h3>Assign Teachers to Batches</h3>
+                                <p class="help-text">Select a teacher for each batch that will be taking this practical subject.</p>
+                                <div id="batch-teachers-container"></div>
+                                <!-- Hidden template for batch-teacher form -->
+                                <div id="batch-teacher-template" style="display:none;">
+                                    <div class="batch-teacher-form" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                        <div class="form-group">
+                                            <label>Batch</label>
+                                            <input type="text" class="batch-label" readonly style="background:#e9ecef; border:none; font-weight:600;" />
+                                            <input type="hidden" class="batch-id-input" name="batch_teacher_batch_ids" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Teacher for this Batch</label>
+                                            <select class="teacher-select" name="batch_teacher_teacher_ids">
+                                                {% for teacher in teachers %}
+                                                <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit" class="save-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <a href="{% url 'view_subject' subject.id %}" class="back-link">
+                        <i class="fas fa-arrow-left"></i> Back to Details
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const theoryCheckbox = document.getElementById('id_is_theory');
+            const practicalCheckbox = document.getElementById('id_is_practical');
+            const theoryFields = document.getElementById('theory_fields');
+            const practicalFields = document.getElementById('practical_fields');
+            const yearSelect = document.getElementById('id_year');
+            const divisionSelect = document.getElementById('id_division');
+            const batchesSelect = document.querySelector('select[name="batches"]');
+
+            // Mappings from backend (ensure these are passed in context)
+            const divisionBatches = {{ division_batches|safe }};
+            const yearDivisions = {{ year_divisions|safe }};
+
+            function toggleFields() {
+                theoryFields.classList.toggle('show', theoryCheckbox.checked);
+                practicalFields.classList.toggle('show', practicalCheckbox.checked);
+            }
+
+            theoryCheckbox.addEventListener('change', toggleFields);
+            practicalCheckbox.addEventListener('change', toggleFields);
+            toggleFields();
+
+            function filterBatches() {
+                const selectedYear = yearSelect.value;
+                const selectedDivision = divisionSelect.value;
+                const allowedDivisions = yearDivisions[selectedYear] || [];
+                if (allowedDivisions.includes(Number(selectedDivision))) {
+                    const allowedBatches = divisionBatches[selectedDivision] || [];
+                    Array.from(batchesSelect.options).forEach(option => {
+                        if (!option.value) return;
+                        const show = allowedBatches.includes(Number(option.value));
+                        option.style.display = show ? '' : 'none';
+                        option.selected = show && practicalCheckbox.checked;
+                    });
+                } else {
+                    Array.from(batchesSelect.options).forEach(option => {
+                        if (!option.value) return;
+                        option.style.display = 'none';
+                        option.selected = false;
+                    });
+                }
+            }
+            yearSelect.addEventListener('change', filterBatches);
+            divisionSelect.addEventListener('change', filterBatches);
+            practicalCheckbox.addEventListener('change', filterBatches);
+            filterBatches();
+
+            // Batch-teacher assignment logic (with pre-selection for edit)
+            const batchTeachersForm = document.getElementById('batchTeachersForm');
+            const batchTeachersContainer = document.getElementById('batch-teachers-container');
+            const batchTeacherTemplate = document.getElementById('batch-teacher-template').innerHTML;
+            // Get mapping from backend for pre-selection
+            const batchTeacherMap = {{ subject.practical_batch_teachers|default:'{}'|safe }};
+
+            function toggleBatchTeachersForm() {
+                batchTeachersForm.style.display = practicalCheckbox.checked ? 'block' : 'none';
+                if (!practicalCheckbox.checked) {
+                    batchTeachersContainer.innerHTML = '';
+                }
+            }
+
+            function updateBatchTeacherForms() {
+                const selectedBatches = Array.from(batchesSelect.selectedOptions).map(option => ({id: option.value, name: option.textContent}));
+                // Remove forms for unselected batches
+                Array.from(batchTeachersContainer.children).forEach(form => {
+                    const batchId = form.querySelector('.batch-id-input').value;
+                    if (!selectedBatches.some(b => b.id === batchId)) {
+                        form.remove();
+                    }
+                });
+                // Add forms for newly selected batches
+                selectedBatches.forEach(batch => {
+                    if (!batchTeachersContainer.querySelector(`.batch-id-input[value="${batch.id}"]`)) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = batchTeacherTemplate.trim();
+                        const form = tempDiv.firstChild;
+                        form.querySelector('.batch-label').value = batch.name;
+                        form.querySelector('.batch-id-input').value = batch.id;
+                        // Pre-select teacher if editing
+                        const teacherSelect = form.querySelector('.teacher-select');
+                        if (batchTeacherMap[batch.id]) {
+                            teacherSelect.value = batchTeacherMap[batch.id];
+                        }
+                        batchTeachersContainer.appendChild(form);
+                    }
+                });
+            }
+
+            practicalCheckbox.addEventListener('change', toggleBatchTeachersForm);
+            batchesSelect.addEventListener('change', updateBatchTeacherForms);
+
+            // Initial state
+            toggleBatchTeachersForm();
+            updateBatchTeacherForms();
+        });
+    </script>
+</body>
+</html>

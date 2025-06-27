@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Timetable States - Timetable Generator</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-color: #2c3e50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .back-btn:hover {
+            background: #357abd;
+        }
+
+        .states-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .state-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .state-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .state-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+
+        .state-header i {
+            font-size: 1.5em;
+            color: var(--primary-color);
+        }
+
+        .state-content {
+            margin-bottom: 20px;
+        }
+
+        .state-content p {
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+
+        .state-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: var(--transition);
+            text-decoration: none;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .view-btn {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .view-btn:hover {
+            background: #27ae60;
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .no-states {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            color: var(--text-color);
+        }
+
+        .no-states i {
+            font-size: 3em;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .no-states p {
+            margin-bottom: 20px;
+        }
+
+        .generate-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 20px;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .generate-btn:hover {
+            background: #27ae60;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .states-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Saved Timetable States</h1>
+        </div>
+
+        <a href="{% url 'department_dashboard' %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+
+        {% if saved_states %}
+            <div class="states-grid">
+                {% for state in saved_states %}
+                    <div class="state-card">
+                        <div class="state-header">
+                            <i class="fas fa-calendar-check"></i>
+                            <h3>State {{ forloop.counter }}</h3>
+                        </div>
+                        <div class="state-content">
+                            <p><strong>Department:</strong> {{ state.department.name }}</p>
+                            <p><strong>Created:</strong> {{ state.created_at|date:"F j, Y, g:i a" }}</p>
+                            <p><strong>Academic Year:</strong> {{ state.academic_year }}</p>
+                            <p><strong>Semester:</strong> {{ state.semester }}</p>
+                            <p><strong>Generated On:</strong> {{ state.generated_on|date:"F j, Y" }}</p>
+                        </div>
+                        <div class="state-actions">
+                            <a href="{% url 'view_saved_timetable' state.id %}" class="action-btn view-btn">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <button onclick="deleteState('{{ state.id }}')" class="action-btn delete-btn">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-states">
+                <i class="fas fa-calendar-times"></i>
+                <p>No saved timetable states found.</p>
+                <p>Generate a new timetable to save states.</p>
+                <a href="{% url 'generate_timetable' %}" class="generate-btn">
+                    <i class="fas fa-magic"></i> Generate Timetable
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function deleteState(stateId) {
+            if (confirm('Are you sure you want to delete this timetable state?')) {
+                fetch(`/delete-state/${stateId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error deleting timetable state');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting timetable state');
+                });
+            }
+        }
+    </script>
+</body>
+</html> 

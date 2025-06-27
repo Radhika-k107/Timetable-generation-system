@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Timetable Generator{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        .timetable-entry {
+            padding: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+        .timetable-entry:last-child {
+            margin-bottom: 0;
+        }
+        .table td {
+            vertical-align: top;
+        }
+
+        /* Confirmation Dialog Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+        }
+
+        .custom-alert.confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1050;
+            width: 400px;
+            max-width: 90%;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .confirm-content {
+            text-align: center;
+        }
+
+        .confirm-content i {
+            font-size: 2.5em;
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+
+        .confirm-content span {
+            display: block;
+            margin-bottom: 25px;
+            font-size: 1.2em;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .confirm-buttons button {
+            padding: 10px 25px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            min-width: 100px;
+            width: auto;
+        }
+
+        .confirm-buttons .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .confirm-buttons .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .confirm-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -48%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'admin_dashboard' %}">Timetable Generator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manual_timetable' %}">Manual Timetable</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-4">
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">© 2025 Timetable Generator</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Confirmation Dialog Script -->
+    <script>
+        function confirmDelete(formId, message = 'Are you sure you want to delete this item? This action cannot be undone.') {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-backdrop fade show';
+            document.body.appendChild(overlay);
+            
+            const alert = document.createElement('div');
+            alert.className = 'custom-alert confirm-dialog';
+            alert.innerHTML = `
+                <div class="confirm-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>${message}</span>
+                    <div class="confirm-buttons">
+                        <button class="btn btn-danger" onclick="proceedDelete('${formId}')">Delete</button>
+                        <button class="btn btn-secondary" onclick="closeConfirmDialog()">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alert);
+            return false;
+        }
+
+        function closeConfirmDialog() {
+            const dialog = document.querySelector('.custom-alert.confirm-dialog');
+            const overlay = document.querySelector('.modal-backdrop');
+            if (dialog) dialog.remove();
+            if (overlay) overlay.remove();
+        }
+
+        function proceedDelete(formId) {
+            const form = document.getElementById(formId);
+            if (form) {
+                closeConfirmDialog();
+                form.submit();
+            }
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

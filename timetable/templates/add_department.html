@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Department - Timetable Generator</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --accent-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --text-color: #2c3e50;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .form-container, .list-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .form-container h2, .list-container h2 {
+            color: var(--text-color);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-container h2 i, .list-container h2 i {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        button[type="submit"]:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        .department-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .department-list th {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .department-list td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            color: var(--text-color);
+        }
+
+        .department-list tr:hover {
+            background: var(--secondary-color);
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .back-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .department-list {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Department Management</h1>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="form-container">
+                <h2><i class="fas fa-building"></i> Add New Department</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="{{ form.name.id_for_label }}">Department Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.code.id_for_label }}">Department Code</label>
+                        {{ form.code }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.admin_username.id_for_label }}">Admin Username</label>
+                        {{ form.admin_username }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.admin_email.id_for_label }}">Admin Email</label>
+                        {{ form.admin_email }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.admin_password.id_for_label }}">Admin Password</label>
+                        {{ form.admin_password }}
+                    </div>
+                    <button type="submit">
+                        <i class="fas fa-plus"></i> Add Department
+                    </button>
+                </form>
+            </div>
+
+            <div class="list-container">
+                <h2><i class="fas fa-list"></i> Existing Departments</h2>
+                {% if departments %}
+                <table class="department-list">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Admin</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for department in departments %}
+                        <tr>
+                            <td>{{ department.name }}</td>
+                            <td>{{ department.code }}</td>
+                            <td>{{ department.admin.username }}</td>
+                            <td>
+                                <a href="{% url 'delete_department' department.pk %}" class="delete-btn">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="empty-message">No departments added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{% url 'main_admin_dashboard' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html> 
